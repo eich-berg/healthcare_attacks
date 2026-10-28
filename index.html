@@ -125,8 +125,11 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:12px 0 4px}
 const API = "https://goodshepherdcollective.org/api/healthcare_attacks.json";
 const PROXY = "";
 
-const PERP_COLORS = {"Israeli military":"#c0392b","Civilian":"#d98324","Law enforcement":"#7d5ba6","More than one perpetrator":"#2f6fb0","Opposition group":"#1b8a6b","No Information":"#8a979c"};
+const PERP_COLORS = {"State military":"#c0392b","Civilian":"#d98324","Law enforcement":"#7d5ba6","More than one perpetrator":"#2f6fb0","Opposition group":"#1b8a6b","No Information":"#8a979c"};
 const FALLBACK = "#8a979c";
+// Shown names for perpetrator tags; the data itself keeps its original value
+const PERP_LABEL = {"State military":"Israeli military"};
+const perpName = p => PERP_LABEL[p]||p;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const COUNTRY = {PSE:"Palestine",LBN:"Lebanon",ISR:"Israel"};
@@ -190,7 +193,7 @@ function buildControls(){
   const perps = count("perp"), cs = count("isoCode"), ws = count("weapon");
   perpOn = new Set(Object.keys(perps)); countryOn = new Set(Object.keys(cs));
   $("perps").innerHTML = Object.entries(perps).sort((a,b)=>b[1]-a[1]).map(([p,c])=>
-    `<label><input type="checkbox" data-p="${esc(p)}" checked><span class="sw" style="background:${PERP_COLORS[p]||FALLBACK}"></span>${esc(p)}<span class="cnt">${c}</span></label>`).join("");
+    `<label><input type="checkbox" data-p="${esc(p)}" checked><span class="sw" style="background:${PERP_COLORS[p]||FALLBACK}"></span>${esc(perpName(p))}<span class="cnt">${c}</span></label>`).join("");
   $("countries").innerHTML = Object.entries(cs).sort((a,b)=>b[1]-a[1]).map(([c,m])=>
     `<label><input type="checkbox" data-c="${esc(c)}" checked>${esc(COUNTRY[c]||c)}<span class="cnt">${m}</span></label>`).join("");
   $("weapon").innerHTML = '<option value="">All weapons</option>' + Object.entries(ws).sort((a,b)=>b[1]-a[1]).map(([w,m])=>`<option value="${esc(w)}">${esc(w)} (${m})</option>`).join("");
@@ -205,7 +208,7 @@ function filteredAllDays(){
 function popup(r){
   const row=(a,b)=>b?`<dt>${a}</dt><dd>${b}</dd>`:"";
   return `<div class="pop"><b>${esc(fmtShort(r.day))}, ${esc(COUNTRY[r.isoCode]||r.isoCode)}</b>${esc(r.editedIncidentDescription)}<dl>`+
-    row("Perpetrator",esc(r.perp))+row("Weapon",esc(r.weapon))+row("Killed",r.k||"")+row("Injured",r.inj||"")+row("Kidnapped",r.kid||"")+row("Assaulted",r.ass||"")+
+    row("Perpetrator",esc(perpName(r.perp)))+row("Weapon",esc(r.weapon))+row("Killed",r.k||"")+row("Injured",r.inj||"")+row("Kidnapped",r.kid||"")+row("Assaulted",r.ass||"")+
     row("Facilities destroyed",r.des||"")+row("Facilities damaged",r.dam||"")+row("Location",esc(r.geoPrecision))+row("ID",esc(r.incidentNumber))+`</dl></div>`;
 }
 
@@ -271,7 +274,7 @@ function renderStats(base){
     (dead ? row("Deadliest day",link(dead,dead[1].k.toLocaleString()+" killed")) : "");
   $("bars").innerHTML =
     barList("By year",base,r=>r.day.slice(0,4),{chrono:true})+
-    barList("By perpetrator",base,r=>r.perp,{top:6,color:k=>PERP_COLORS[k]||FALLBACK})+
+    barList("By perpetrator",base,r=>r.perp,{top:6,label:perpName,color:k=>PERP_COLORS[k]||FALLBACK})+
     barList("By country",base,r=>r.isoCode,{label:k=>COUNTRY[k]||k})+
     barList("By weapon",base,r=>r.weapon,{top:6});
 }
@@ -415,3 +418,4 @@ load(false);
 </script>
 </body>
 </html>
+
